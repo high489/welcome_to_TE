@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { Component, memo, PureComponent } from 'react';
 
 type IUser = {
     name: string
@@ -10,22 +10,35 @@ type IProps = {
 }
 
 // functional component
-const FirstComponent = ({ name, age }: IUser) => (
+// React.memo позволяет делать перерендер функционального компонента только если props изменились
+const FirstComponent = memo(({ name, age }: IUser) => (
     <div>
         my name is {name}, my age is {age}
     </div>
-);
+));
 
 // functional component
-// Этот компонент является необязательным для выполнения задания, но продемонстрирует глубину знаний в React.
+// как и сказано в задании:
+// "объект `user` меняет свою ссылку, но его свойства остаются неизменными"
+// поэтому каждый раз компонент будет считать prop user новым, и делать перерендер, даже если обернуть компонент в React.memo
+// React.memo позволяет задать условия перерендера, в этом случае сравнение значений используемых свойств объекта user в предыдущем и текущем состоянии
+
 const SecondComponent = ({ user: { name, age } }: IProps) => (
     <div>
         my name is {name}, my age is {age}
     </div>
-);
+)
+
+export const SecondComponentMemoized = memo(
+    SecondComponent,
+    // prev - объект с предыдущими пропсами компоента
+    // next - объект с пропсами которые пришли
+    (prev, next) => prev.user.name === next.user.name && prev.user.age === next.user.age
+)
 
 // class component
-class ThirdComponent extends Component<IUser> {
+// аналогично React.memo в функциональных компонентах, в классовых компоентах работает PureComponent
+class ThirdComponent extends PureComponent<IUser> {
     render() {
         return (
             <div>
@@ -36,7 +49,17 @@ class ThirdComponent extends Component<IUser> {
 }
 
 // class component
+// В FourthComponent ситуация аналогична SecondComponent:
+// ссылка на объект this.props.user будет менятся хоть свойства объекта и останутся с теми же значениями
+// Для решения оптимизации рендера в классовых компоеннтах используются методы жизненного цикла
+// В данном случае я взял shouldComponentUpdate и сравнил в нем будущие значения используемых свойств объекта user с текущими
 class FourthComponent extends Component<IProps> {
+    shouldComponentUpdate(nextProps: IProps) {
+        return (
+          nextProps.user.name !== this.props.user.name ||
+          nextProps.user.age !== this.props.user.age
+        )
+    }
     render() {
         return (
             <div>

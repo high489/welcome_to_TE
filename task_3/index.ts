@@ -45,3 +45,25 @@ const BALLONS: { [key: string]: BallonI } = {
 };
 
 // Ваш код здесь
+async function fetchAllPublicBallons(ballons: { [key: string]: BallonI }) {
+  let totalBallonsAmount = 0
+  for (let color in ballons) {
+    let ballonsAmountById = 0
+    try {
+      if (ballons[color].isPublic) {
+        ballonsAmountById = await fetchBallonAmount(ballons[color].id)
+        totalBallonsAmount += ballonsAmountById
+      }
+    } catch (error) {
+      console.log('fetch error')
+    }
+  }
+  return totalBallonsAmount
+}
+
+console.log(
+  'result',
+  fetchAllPublicBallons(BALLONS)
+    .then((result) => console.log('result', result))
+    .catch(console.error)
+)
